@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>測試頁面 - AList OneDrive 授權工具</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f7f7f7;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #4285f4;
+        }
+        .test-info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vercel 部署測試成功</h1>
+        
+        <div class="test-info">
+            <p>如果您能看到此頁面，表示基本的靜態檔案服務正常運作。</p>
+        </div>
+        
+        <p><a href="/">返回首頁</a></p>
+        
+        <hr>
+        <p>伺服器時間: <span id="server-time"></span></p>
+    </div>
+
+    <script>
+        document.getElementById('server-time').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>

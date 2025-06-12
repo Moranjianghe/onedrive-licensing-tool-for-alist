@@ -7,6 +7,9 @@ const fs = require('fs');
 const { ConfidentialClientApplication } = require('@azure/msal-node');
 const { Client } = require('@microsoft/microsoft-graph-client');
 
+// 判斷是否在 Vercel 環境中運行
+const isVercel = process.env.VERCEL === '1';
+
 // 配置
 const config = {
   clientId: process.env.CLIENT_ID || 'your_client_id_here',
@@ -164,18 +167,19 @@ async function handleAuthCallback(req, res) {
 function serveStaticFile(res, filePath) {
   const fullPath = path.join(__dirname, filePath);
   
-  fs.readFile(fullPath, (error, data) => {
-    if (error) {
-      if (error.code === 'ENOENT') {
-        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end('檔案不存在');
-      } else {
-        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end('伺服器錯誤');
-      }
+  // 檢查文件是否存在
+  try {
+    if (!fs.existsSync(fullPath)) {
+      console.error(`檔案不存在: ${fullPath}`);
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(`檔案不存在: ${filePath}`);
       return;
     }
-
+    
+    // 讀取檔案內容
+    const data = fs.readFileSync(fullPath);
+    
+    // 設置內容類型
     let contentType = 'text/plain';
     const ext = path.extname(filePath);
     
@@ -196,17 +200,26 @@ function serveStaticFile(res, filePath) {
 
     res.writeHead(200, { 'Content-Type': `${contentType}; charset=utf-8` });
     res.end(data);
+  } catch (error) {
+    console.error(`讀取檔案錯誤: ${error.message}`);
+    res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('伺服器錯誤');
+  }
+}
+
+// 根據環境決定是否啟動伺服器
+if (!isVercel) {
+  // 本地開發環境，啟動HTTP伺服器
+  const PORT = process.env.PORT || config.port;
+  server.listen(PORT, () => {
+    const serverUrl = `http://localhost:${PORT}`;
+    console.log(`伺服器已啟動: ${serverUrl}`);
+    console.log(`請開啟瀏覽器訪問: ${serverUrl}`);
   });
 }
 
-// 啟動伺服器
-const PORT = process.env.PORT || config.port;
-
-server.listen(PORT, () => {
-  const serverUrl = `http://localhost:${PORT}`;
-  console.log(`伺服器已啟動: ${serverUrl}`);
-  console.log(`請開啟瀏覽器訪問: ${serverUrl}`);
-});
-
-// 處理 Vercel 部署
-module.exports = server;
+// 處理 Vercel 部署 - 導出為 serverless 函數
+module.exports = (req, res) => {
+  // 在 Vercel 環境中使用我們現有的請求處理邏輯
+  server.emit('request', req, res);
+};
