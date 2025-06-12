@@ -31,10 +31,6 @@
    - 點擊「新增」後，會在下方列表中看到剛剛產生的密碼，**請務必複製並保存這一串值**，之後將無法再次查看！
    - 這個值就是 `client_secret`，稍後在本地 .env 或 Vercel 環境變數中填寫
 
-> ⚠️ **應用類型和 API 權限配置非常重要！**
-> 應用類型必須設置為「Web」，否則 Alist 可能會出現 AADSTS90023 錯誤
-> 未正確配置 API 權限將導致授權後無法訪問 OneDrive 文件
-
 ## 運行
 
 分為本地運行和 Vercel 運行。
@@ -73,7 +69,7 @@
 2. 在 Vercel 環境變數設定中添加：
    - `CLIENT_ID`
    - `CLIENT_SECRET`
-   - `REDIRECT_URI` (必須是 `https://host/auth/callback`)
+   - `REDIRECT_URI` (必須是 `https://your-host/auth/callback`)
 
 ### Vercel 部署後使用
 
@@ -93,7 +89,6 @@
 2. 填入您的 Client ID、Client Secret
 3. 將 Redirect URI 設定為預設值或您自己的 URI
 4. 填入獲取到的 Refresh Token
-5. 選擇正確的區域 (global, cn, us, de)
 
 ## 技術細節
 
