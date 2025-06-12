@@ -1,4 +1,14 @@
-require('dotenv').config();
+// 載入環境變數
+const dotenv = require('dotenv');
+const envResult = dotenv.config();
+
+// 檢查環境變數是否成功載入
+if (envResult.error) {
+  console.error('環境變數載入錯誤:', envResult.error);
+} else {
+  console.log('環境變數載入成功，已載入的變數:', Object.keys(envResult.parsed).join(', '));
+}
+
 require('isomorphic-fetch');
 const http = require('http');
 const path = require('path');
@@ -9,6 +19,12 @@ const { Client } = require('@microsoft/microsoft-graph-client');
 
 // 判斷是否在 Vercel 環境中運行
 const isVercel = process.env.VERCEL === '1';
+console.log('運行環境：', isVercel ? 'Vercel' : '本地');
+
+// 輸出環境變數用於調試
+console.log('環境變數 CLIENT_ID:', process.env.CLIENT_ID ? '已設定 (長度: ' + process.env.CLIENT_ID.length + ')' : '未設定');
+console.log('環境變數 CLIENT_SECRET:', process.env.CLIENT_SECRET ? '已設定 (長度: ' + process.env.CLIENT_SECRET.length + ')' : '未設定');
+console.log('環境變數 REDIRECT_URI:', process.env.REDIRECT_URI || '未設定');
 
 // 配置
 const config = {
