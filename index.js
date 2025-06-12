@@ -9,13 +9,12 @@ if (envResult.error) {
   console.log('環境變數載入成功，已載入的變數:', Object.keys(envResult.parsed).join(', '));
 }
 
-require('isomorphic-fetch');
+
 const http = require('http');
 const path = require('path');
 const url = require('url');
 const fs = require('fs');
-const { ConfidentialClientApplication } = require('@azure/msal-node');
-const { Client } = require('@microsoft/microsoft-graph-client');
+const axios = require('axios');
 
 // 判斷是否在 Vercel 環境中運行
 const isVercel = process.env.VERCEL === '1';
@@ -55,16 +54,7 @@ const onedriveHostMap = {
   }
 };
 
-// 驗證設置
-const msalConfig = {
-  auth: {
-    clientId: config.clientId,
-    clientSecret: config.clientSecret,
-    authority: `${onedriveHostMap[config.region].oauth}/common`,
-  }
-};
-
-// 確保請求包含 offline_access 範圍，這對於獲取 refresh token 至關重要
+// OAuth 權限範圍
 const scopes = [
   'offline_access',
   'Files.Read',
@@ -72,9 +62,6 @@ const scopes = [
   'Files.ReadWrite',
   'Files.ReadWrite.All'
 ];
-
-// 創建 MSAL 應用實例
-const msalApp = new ConfidentialClientApplication(msalConfig);
 
 // 建立 HTTP 伺服器
 const server = http.createServer(async (req, res) => {
@@ -90,11 +77,11 @@ const server = http.createServer(async (req, res) => {
       serveStaticFile(res, 'public/index.html');
 
     } else if (pathname === '/auth/login') {
-      // 授權登入
+      // 標準 OAuth 2.0 登入
       handleAuthLogin(req, res);
 
     } else if (pathname === '/auth/callback') {
-      // 授權回調
+      // 標準 OAuth 2.0 回調
       await handleAuthCallback(req, res);
 
     } else if (pathname.startsWith('/public/')) {
@@ -113,28 +100,23 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-// 處理授權登入
+// 標準 OAuth 2.0 登入
 function handleAuthLogin(req, res) {
-  const authCodeUrlParameters = {
-    scopes: scopes,
-    redirectUri: config.redirectUri,
-  };
-
-  // 獲取授權 URL
-  msalApp.getAuthCodeUrl(authCodeUrlParameters)
-    .then((authUrl) => {
-      console.log('授權 URL:', authUrl);
-      res.writeHead(302, { Location: authUrl });
-      res.end();
-    })
-    .catch((error) => {
-      console.error('獲取授權 URL 失敗:', error);
-      res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('獲取授權 URL 失敗');
-    });
+  const authEndpoint = `${onedriveHostMap[config.region].oauth}/common/oauth2/v2.0/authorize`;
+  const authParams = new URLSearchParams({
+    client_id: config.clientId,
+    response_type: 'code',
+    redirect_uri: config.redirectUri,
+    scope: scopes.join(' '),
+    response_mode: 'query'
+  });
+  const authUrl = `${authEndpoint}?${authParams.toString()}`;
+  console.log('授權 URL:', authUrl);
+  res.writeHead(302, { Location: authUrl });
+  res.end();
 }
 
-// 處理授權回調
+// 標準 OAuth 2.0 回調
 async function handleAuthCallback(req, res) {
   const parsedUrl = url.parse(req.url, true);
   const code = parsedUrl.query.code;
@@ -146,136 +128,44 @@ async function handleAuthCallback(req, res) {
     res.end(`授權錯誤: ${error}`);
     return;
   }
-
   if (!code) {
     console.error('未提供授權碼');
     res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('未提供授權碼');
     return;
-  }  try {
+  }
+  try {
     console.log('正在用授權碼交換 token...');
-    
-    // 使用授權碼交換 token
-    const tokenResponse = await msalApp.acquireTokenByCode({
-      code: code,
-      scopes: scopes,
-      redirectUri: config.redirectUri,
+    const tokenUrl = `${onedriveHostMap[config.region].oauth}/common/oauth2/v2.0/token`;
+    const tokenParams = new URLSearchParams();
+    tokenParams.append('client_id', config.clientId);
+    tokenParams.append('client_secret', config.clientSecret);
+    tokenParams.append('code', code);
+    tokenParams.append('redirect_uri', config.redirectUri);
+    tokenParams.append('grant_type', 'authorization_code');
+    tokenParams.append('scope', scopes.join(' '));
+    const tokenResponse = await axios.post(tokenUrl, tokenParams, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
-    
-    console.log('成功獲取 Token');
-    
-    // MSAL 不直接暴露 refreshToken，但我們可以從序列化的 token cache 中提取
-    let refreshToken = '';
-    
-    // 輸出有關 tokenResponse 的詳細信息，但保護敏感數據
-    if (tokenResponse) {
-      console.log('Token響應類型:', typeof tokenResponse);
-      
-      // 創建一個安全版本用於日誌輸出
-      const safeTokenResponse = { ...tokenResponse };
-      if (safeTokenResponse.accessToken) safeTokenResponse.accessToken = '已設定但不顯示';
-      if (safeTokenResponse.idToken) safeTokenResponse.idToken = '已設定但不顯示';
-      
-      // 輸出對象中的所有頂級屬性
-      console.log('Token響應包含的屬性:', Object.keys(tokenResponse));
-      console.log('Token響應內容 (安全版本):', JSON.stringify(safeTokenResponse, null, 2));
-      
-      // 檢查各種可能的位置
-      if (tokenResponse.refreshToken) {
-        refreshToken = tokenResponse.refreshToken;
-        console.log('從 tokenResponse.refreshToken 獲取到了 refreshToken');
-      } else if (tokenResponse.account && tokenResponse.account.refreshToken) {
-        refreshToken = tokenResponse.account.refreshToken;
-        console.log('從 tokenResponse.account.refreshToken 獲取到了 refreshToken');
-      } else if (tokenResponse.response && tokenResponse.response.refresh_token) {
-        refreshToken = tokenResponse.response.refresh_token;
-        console.log('從 tokenResponse.response.refresh_token 獲取到了 refreshToken');
-      } else {
-        // 由於MSAL刻意不暴露refresh token，我們需要處理這種情況
-        console.log('在標準位置未找到 refreshToken，檢查其他可能的位置');
-        
-        // 檢查是否有內部或私有屬性可能包含refreshToken
-        for (const key in tokenResponse) {
-          const prop = tokenResponse[key];
-          if (typeof prop === 'string' && prop.length > 20) {
-            console.log(`檢查屬性 ${key} (長度: ${prop.length})`);
-            
-            // 不要輸出實際值，但可以檢查它是否看起來像 refresh token
-            if (prop.length > 500) {
-              console.log(`屬性 ${key} 可能是 refresh token (長度足夠長)`);
-              refreshToken = prop;
-              break;
-            }
-          } else if (typeof prop === 'object' && prop !== null) {
-            console.log(`檢查對象屬性 ${key} 的子屬性`);
-            const subKeys = Object.keys(prop);
-            
-            if (subKeys.includes('refreshToken') || subKeys.includes('refresh_token')) {
-              console.log(`在 ${key} 對象中找到 refreshToken 屬性`);
-              refreshToken = prop.refreshToken || prop.refresh_token;
-              break;
-            }
-          }
-        }
-        
-        if (!refreshToken) {
-          console.log('嘗試使用緩存訪問來獲取 refresh token...');
-          
-          try {
-            // 使用該帳戶嘗試另一種獲取方法
-            if (tokenResponse.account) {
-              // 使用 acquireTokenSilent 可能會在內部使用緩存的 refresh token
-              const silentRequest = {
-                account: tokenResponse.account,
-                scopes: scopes,
-                forceRefresh: true  // 強制刷新以使用 refresh token
-              };
-              
-              console.log('嘗試靜默獲取 token...');
-              const silentResponse = await msalApp.acquireTokenSilent(silentRequest);
-              console.log('靜默獲取 token 成功');
-              
-              // 檢查靜默響應中的 refresh token
-              if (silentResponse.refreshToken) {
-                refreshToken = silentResponse.refreshToken;
-                console.log('從靜默請求獲取到了 refreshToken');
-              }
-            }
-          } catch (silentError) {
-            console.error('靜默獲取 token 失敗:', silentError.message);
-          }
-        }
-      }
+    const data = tokenResponse.data;
+    // 安全日誌
+    const safeLog = { ...data };
+    if (safeLog.access_token) safeLog.access_token = '已設定';
+    if (safeLog.refresh_token) safeLog.refresh_token = '已設定';
+    if (safeLog.id_token) safeLog.id_token = '已設定';
+    console.log('Token 響應:', JSON.stringify(safeLog, null, 2));
+    // 結果頁
+    let url = '/public/success.html?client_id=' + encodeURIComponent(config.clientId) +
+      '&redirect_uri=' + encodeURIComponent(config.redirectUri);
+    if (data.refresh_token) {
+      url += '&refresh_token=' + encodeURIComponent(data.refresh_token);
+    } else if (data.access_token) {
+      url += '&access_token=' + encodeURIComponent(data.access_token);
     }
-      // 如果經過上面所有嘗試仍然沒有獲取到 refresh token，我們需要使用一個替代解決方案
-    if (!refreshToken) {
-      console.log('所有方法都未能獲取到 refresh token，使用 accessToken 代替...');
-      
-      // 雖然我們無法直接獲取 refresh token，但我們可以提供 accessToken 給前端
-      const accessToken = tokenResponse.accessToken || '';
-        // 注意：這是一個臨時解決方案，因為 access token 有效期較短（通常1小時）
-      const successUrl = '/public/success.html' + 
-        `?client_id=${encodeURIComponent(config.clientId)}` +
-        `&redirect_uri=${encodeURIComponent(config.redirectUri)}` +
-        `&access_token=${encodeURIComponent(accessToken)}` +
-        `&note=${encodeURIComponent('未能獲取refresh_token，使用access_token作為替代，請注意其有效期較短')}`;
-      res.writeHead(302, { Location: successUrl });
-      res.end();
-    } else {
-      // 成功獲取到 refresh token 的情況
-      console.log('成功獲取 refresh token，長度:', refreshToken.length);
-      
-      // 重定向到成功頁面並傳遞 token（移除敏感資訊 client_secret）
-      const successUrl = '/public/success.html' + 
-        `?client_id=${encodeURIComponent(config.clientId)}` +
-        `&redirect_uri=${encodeURIComponent(config.redirectUri)}` +
-        `&refresh_token=${encodeURIComponent(refreshToken)}`;
-      
-      res.writeHead(302, { Location: successUrl });
-      res.end();
-    }
-  } catch (error) {
-    console.error('獲取 Token 失敗:', error);
+    res.writeHead(302, { Location: url });
+    res.end();
+  } catch (err) {
+    console.error('獲取 Token 失敗:', err.response ? err.response.data : err.message);
     res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('獲取 Token 失敗');
   }
