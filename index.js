@@ -218,8 +218,5 @@ if (!isVercel) {
   });
 }
 
-// 處理 Vercel 部署 - 導出為 serverless 函數
-module.exports = (req, res) => {
-  // 在 Vercel 環境中使用我們現有的請求處理邏輯
-  server.emit('request', req, res);
-};
+// 直接導出伺服器實例，供 API 路由使用
+module.exports = server;
