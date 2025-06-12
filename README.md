@@ -73,8 +73,7 @@
 2. 在 Vercel 環境變數設定中添加：
    - `CLIENT_ID`
    - `CLIENT_SECRET`
-   - `REDIRECT_URI` (必須是 `https://your-vercel-app.vercel.app/auth/callback`)
-   - `REGION` (可選，預設為 global)
+   - `REDIRECT_URI` (必須是 `https://host/auth/callback`)
 
 ### Vercel 部署後使用
 
