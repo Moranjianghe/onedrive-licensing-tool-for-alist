@@ -89,12 +89,26 @@
         .note h3 {
             margin-bottom: 10px;
             color: #f57c00;
-        }
-        .footer {
+        }        .footer {
             margin-top: 30px;
             text-align: center;
             color: #666;
             font-size: 14px;
+        }
+        .token-type {
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .special-note-container {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e8f5e9;
+            border-radius: 5px;
+            display: none;
+        }
+        .special-note {
+            margin: 0;
+            color: #2e7d32;
         }
         .button {
             display: inline-block;
@@ -139,12 +153,15 @@
                 <label for="redirect-uri">Redirect URI:</label>
                 <input type="text" id="redirect-uri" readonly>
                 <button class="copy-btn" onclick="copyToClipboard('redirect-uri')">複製</button>
-            </div>
-            
-            <div class="token-field">
-                <label for="refresh-token">Refresh Token:</label>
+            </div>            <div class="token-field">
+                <label for="refresh-token">令牌值 (Token):</label>
+                <p id="token-type-message" class="token-type"></p>
                 <textarea id="refresh-token" readonly></textarea>
                 <button class="copy-btn" onclick="copyToClipboard('refresh-token')">複製</button>
+            </div>
+            
+            <div id="special-note-container" class="special-note-container">
+                <p id="special-note" class="special-note"></p>
             </div>
         </div>
           <div class="note">
@@ -168,14 +185,34 @@
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const clientId = urlParams.get('client_id');
-            // 不再從 URL 參數中獲取 client_secret
             const redirectUri = urlParams.get('redirect_uri');
             const refreshToken = urlParams.get('refresh_token');
+            const accessToken = urlParams.get('access_token');
+            const note = urlParams.get('note');
             
             document.getElementById('client-id').value = clientId || '';
-            // 不再設定 client-secret 元素的值
             document.getElementById('redirect-uri').value = redirectUri || '';
-            document.getElementById('refresh-token').value = refreshToken || '';
+            
+            // 處理 refresh token 或 access token
+            if (refreshToken) {
+                document.getElementById('refresh-token').value = refreshToken;
+                document.getElementById('token-type-message').textContent = "已獲取 Refresh Token (長期有效)";
+                document.getElementById('token-type-message').style.color = "#0f9d58";
+            } else if (accessToken) {
+                document.getElementById('refresh-token').value = accessToken;
+                document.getElementById('token-type-message').textContent = "獲取到的是 Access Token (短期有效，建議使用AList自動更新方式)";
+                document.getElementById('token-type-message').style.color = "#f57c00";
+            } else {
+                document.getElementById('refresh-token').value = "未獲取到任何令牌，請重試";
+                document.getElementById('token-type-message').textContent = "授權失敗，請聯繫管理員";
+                document.getElementById('token-type-message').style.color = "#d32f2f";
+            }
+            
+            // 顯示注意事項
+            if (note) {
+                document.getElementById('special-note').textContent = note;
+                document.getElementById('special-note-container').style.display = "block";
+            }
         };
         
         // 複製到剪貼簿
