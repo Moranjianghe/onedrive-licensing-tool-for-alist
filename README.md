@@ -45,6 +45,8 @@
    CLIENT_SECRET=your_client_secret_here
    REDIRECT_URI=http://localhost:3000/auth/callback
    PORT=3000 #可選
+   # REGION 可選值: global（預設）、cn、us
+   REGION=global #可選
    ```
 
 2. 安裝依賴：
@@ -70,6 +72,7 @@
    - `CLIENT_ID`
    - `CLIENT_SECRET`
    - `REDIRECT_URI` (必須是 `https://your-host/auth/callback`)
+   -  `REGION` #可選，可選值: global（預設）、cn、us
 
 ### Vercel 部署後使用
 

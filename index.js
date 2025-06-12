@@ -26,7 +26,7 @@ const config = {
   port: process.env.PORT || 3000
 };
 
-// Microsoft Graph API 主機映射（自動根據環境變數 REGION 選擇 base url，不暴露 region 給用戶）
+// Microsoft Graph API 主機映射
 const region = process.env.REGION || 'global';
 const onedriveHostMap = {
   global: {
@@ -40,10 +40,6 @@ const onedriveHostMap = {
   us: {
     oauth: 'https://login.microsoftonline.us',
     api: 'https://graph.microsoft.us'
-  },
-  de: {
-    oauth: 'https://login.microsoftonline.de',
-    api: 'https://graph.microsoft.de'
   }
 };
 
