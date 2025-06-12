@@ -9,6 +9,7 @@
 - 支持多個區域 (global, cn, us, de)
 - 提供完整的掛載所需信息 (refresh_token 等)
 - 可輕鬆部署到 Vercel 無伺服器平台
+- **兩種獲取 token 的方式**：MSAL 和直接 OAuth
 
 ## 本地開發與運行
 
@@ -41,10 +42,14 @@ REGION=global
 npm install
 ```
 
-3. 啟動服務：
+3. 啟動服務（兩種選擇）：
 
 ```bash
+# 使用 MSAL 方式 (可能無法獲取 refresh token)
 npm start
+
+# 或使用 直接 OAuth 方式 (建議，可獲取 refresh token)
+npm run start:oauth
 ```
 
 4. 在瀏覽器打開 http://localhost:3000
@@ -60,6 +65,13 @@ npm start
    - `REDIRECT_URI` (必須是 `https://your-vercel-app.vercel.app/auth/callback`)
    - `REGION` (可選，預設為 global)
 
+### Vercel 部署後使用
+
+部署後有兩種訪問路徑：
+
+- **MSAL 方式** (不推薦): 訪問首頁或 `/api` 路徑
+- **直接 OAuth 方式** (推薦): 訪問 `/api/oauth` 路徑，可以獲取 refresh token
+
 ## AList 掛載說明
 
 成功獲取授權後，您會得到以下資訊：
@@ -74,15 +86,29 @@ npm start
 1. 選擇存儲類型為 "OneDrive"
 2. 填入您的 Client ID、Client Secret
 3. 將 Redirect URI 設定為預設值或您自己的 URI
-4. 填入獲取到的 Refresh Token
+4. 填入獲取到的 Refresh Token（**強烈建議使用 oauth_direct.js 或 /api/oauth 路徑獲取**）
 5. 選擇正確的區域 (global, cn, us, de)
+
+**注意**：如果遇到 "AADSTS9002313: Invalid request" 錯誤，請使用直接 OAuth 方式獲取 refresh token。
 
 ## 技術細節
 
 - 使用純 Node.js HTTP 模組，無需任何 Web 框架
-- MSAL (Microsoft Authentication Library) 處理 OAuth 授權流程
+- 兩種授權方式：
+  - MSAL (Microsoft Authentication Library) 方式：適用於一般 Microsoft 服務
+  - 直接 OAuth 方式：專為獲取 AList 所需的 refresh token 設計
 - Microsoft Graph 用戶端庫用於與 Microsoft 服務交互
 - 靜態 HTML/CSS/JavaScript 實現用戶界面
+
+## 兩種授權模式對比
+
+| 功能 | MSAL 方式 (index.js) | 直接 OAuth 方式 (oauth_direct.js) |
+|-----|---------------------|------------------------------|
+| 獲取 refresh token | ❌ 受限制 | ✅ 支持 |
+| AList 相容性 | ⚠️ 部分支持 | ✅ 完全支持 |
+| 令牌有效時間 | ⏱️ 短期 (1小時) | 🔄 長期 (最多90天) |
+| Vercel 部署路徑 | /api | /api/oauth |
+| 啟動命令 | `npm start` | `npm run start:oauth` |
 
 ## 隱私聲明
 

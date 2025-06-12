@@ -5,15 +5,23 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node index.js",
+    "start:oauth": "node oauth_direct.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["onedrive", "alist", "oauth", "token", "microsoft-graph"],
+  "keywords": [
+    "onedrive",
+    "alist",
+    "oauth",
+    "token",
+    "microsoft-graph"
+  ],
   "author": "",
   "license": "MIT",
   "description": "一個輕量級工具，用於幫助獲取在 AList 中掛載 OneDrive 時所需的授權 token。",
   "dependencies": {
     "@azure/msal-node": "^3.6.0",
     "@microsoft/microsoft-graph-client": "^3.0.7",
+    "axios": "^1.9.0",
     "dotenv": "^16.5.0",
     "isomorphic-fetch": "^3.0.0"
   }
