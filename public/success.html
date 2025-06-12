@@ -134,13 +134,7 @@
                 <input type="text" id="client-id" readonly>
                 <button class="copy-btn" onclick="copyToClipboard('client-id')">複製</button>
             </div>
-            
-            <div class="token-field">
-                <label for="client-secret">Client Secret:</label>
-                <input type="text" id="client-secret" readonly>
-                <button class="copy-btn" onclick="copyToClipboard('client-secret')">複製</button>
-            </div>
-            
+              <!-- 已移除 Client Secret 部分，不再向用戶顯示敏感資訊 -->
             <div class="token-field">
                 <label for="redirect-uri">Redirect URI:</label>
                 <input type="text" id="redirect-uri" readonly>
@@ -153,10 +147,10 @@
                 <button class="copy-btn" onclick="copyToClipboard('refresh-token')">複製</button>
             </div>
         </div>
-        
-        <div class="note">
+          <div class="note">
             <h3>重要提示</h3>
             <p>請妥善保管您的授權信息，尤其是 Refresh Token，它可以用來存取您的 OneDrive 內容。</p>
+            <p>我們不會顯示 Client Secret，因為這是敏感資訊，應由您自行保管。</p>
             <p>將這些資訊填入 AList 的 OneDrive 存儲設定中即可完成掛載。</p>
         </div>
         
@@ -170,17 +164,16 @@
         </div>
     </div>
 
-    <script>
-        // 獲取URL參數
+    <script>        // 獲取URL參數
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const clientId = urlParams.get('client_id');
-            const clientSecret = urlParams.get('client_secret');
+            // 不再從 URL 參數中獲取 client_secret
             const redirectUri = urlParams.get('redirect_uri');
             const refreshToken = urlParams.get('refresh_token');
             
             document.getElementById('client-id').value = clientId || '';
-            document.getElementById('client-secret').value = clientSecret || '';
+            // 不再設定 client-secret 元素的值
             document.getElementById('redirect-uri').value = redirectUri || '';
             document.getElementById('refresh-token').value = refreshToken || '';
         };

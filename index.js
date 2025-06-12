@@ -159,14 +159,11 @@ async function handleAuthCallback(req, res) {
       code: code,
       scopes: scopes,
       redirectUri: config.redirectUri,
-    });
-
-    console.log('成功獲取 Token');
+    });    console.log('成功獲取 Token');
     
-    // 重定向到成功頁面並傳遞 token
+    // 重定向到成功頁面並傳遞 token（移除敏感資訊 client_secret）
     const successUrl = '/public/success.html' + 
       `?client_id=${encodeURIComponent(config.clientId)}` +
-      `&client_secret=${encodeURIComponent(config.clientSecret)}` +
       `&redirect_uri=${encodeURIComponent(config.redirectUri)}` +
       `&refresh_token=${encodeURIComponent(tokenResponse.refreshToken)}`;
     
