@@ -9,7 +9,16 @@
 - 支持多個區域 (global, cn, us, de)
 - 提供完整的掛載所需信息 (refresh_token 等)
 - 可輕鬆部署到 Vercel 無伺服器平台
-- **兩種獲取 token 的方式**：MSAL 和直接 OAuth
+
+## 解決 "AADSTS9002313: Invalid request" 錯誤
+
+如果您在使用 AList 時遇到 "AADSTS9002313: Invalid request" 錯誤，該錯誤通常是因為：
+
+1. 應用憑證格式不符合 AList 的要求
+2. token 已過期或權限不足
+3. Microsoft API 的變更導致授權流程不相容
+
+請嘗試重新獲取授權，並確保您的 Microsoft 應用程式已經配置了正確的權限。
 
 ## 本地開發與運行
 
@@ -17,7 +26,9 @@
 
 1. 在 [Azure Portal](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) 註冊應用程式
 2. 創建一個新的 Web 應用
-3. 設置重定向 URI 為 `http://localhost:3000/auth/callback`（本地開發）或 `https://your-vercel-app.vercel.app/auth/callback`（Vercel 部署）
+3. 設置重定向 URI：
+   - `http://localhost:3000/auth/callback`（本地開發）
+   - `https://your-vercel-app.vercel.app/auth/callback`（Vercel 部署）
 4. 在「憑證和密碼」部分創建一個新的客戶端密碼
 5. 記下應用程式 (client) ID 和客戶端密碼
 
@@ -42,14 +53,10 @@ REGION=global
 npm install
 ```
 
-3. 啟動服務（兩種選擇）：
+3. 啟動服務：
 
 ```bash
-# 使用 MSAL 方式 (可能無法獲取 refresh token)
 npm start
-
-# 或使用 直接 OAuth 方式 (建議，可獲取 refresh token)
-npm run start:oauth
 ```
 
 4. 在瀏覽器打開 http://localhost:3000
@@ -67,10 +74,7 @@ npm run start:oauth
 
 ### Vercel 部署後使用
 
-部署後有兩種訪問路徑：
-
-- **MSAL 方式** (不推薦): 訪問首頁或 `/api` 路徑
-- **直接 OAuth 方式** (推薦): 訪問 `/api/oauth` 路徑，可以獲取 refresh token
+部署完成後，直接訪問您的 Vercel 應用程式網址，按照界面指引完成授權即可。
 
 ## AList 掛載說明
 
@@ -86,29 +90,17 @@ npm run start:oauth
 1. 選擇存儲類型為 "OneDrive"
 2. 填入您的 Client ID、Client Secret
 3. 將 Redirect URI 設定為預設值或您自己的 URI
-4. 填入獲取到的 Refresh Token（**強烈建議使用 oauth_direct.js 或 /api/oauth 路徑獲取**）
+4. 填入獲取到的 Refresh Token
 5. 選擇正確的區域 (global, cn, us, de)
 
-**注意**：如果遇到 "AADSTS9002313: Invalid request" 錯誤，請使用直接 OAuth 方式獲取 refresh token。
+**注意**：如果遇到 "AADSTS9002313: Invalid request" 錯誤，請嘗試重新獲取授權或聯繫 Microsoft 支持。
 
 ## 技術細節
 
 - 使用純 Node.js HTTP 模組，無需任何 Web 框架
-- 兩種授權方式：
-  - MSAL (Microsoft Authentication Library) 方式：適用於一般 Microsoft 服務
-  - 直接 OAuth 方式：專為獲取 AList 所需的 refresh token 設計
+- MSAL (Microsoft Authentication Library) 處理 OAuth 授權流程
 - Microsoft Graph 用戶端庫用於與 Microsoft 服務交互
 - 靜態 HTML/CSS/JavaScript 實現用戶界面
-
-## 兩種授權模式對比
-
-| 功能 | MSAL 方式 (index.js) | 直接 OAuth 方式 (oauth_direct.js) |
-|-----|---------------------|------------------------------|
-| 獲取 refresh token | ❌ 受限制 | ✅ 支持 |
-| AList 相容性 | ⚠️ 部分支持 | ✅ 完全支持 |
-| 令牌有效時間 | ⏱️ 短期 (1小時) | 🔄 長期 (最多90天) |
-| Vercel 部署路徑 | /api | /api/oauth |
-| 啟動命令 | `npm start` | `npm run start:oauth` |
 
 ## 隱私聲明
 

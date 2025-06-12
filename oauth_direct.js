@@ -75,12 +75,12 @@ const server = http.createServer(async (req, res) => {
       // 首頁
       serveStaticFile(res, 'public/index.html');
 
-    } else if (pathname === '/auth/login') {
-      // 授權登入
+    } else if (pathname === '/auth/login' || pathname === '/oauth/login') {
+      // 授權登入（支持兩種路徑）
       handleAuthLogin(req, res);
 
-    } else if (pathname === '/auth/callback') {
-      // 授權回調
+    } else if (pathname === '/auth/callback' || pathname === '/oauth/callback') {
+      // 授權回調（支持兩種路徑）
       await handleAuthCallback(req, res);
 
     } else if (pathname.startsWith('/public/')) {
@@ -142,6 +142,7 @@ async function handleAuthCallback(req, res) {
     console.log('正在用授權碼交換 token...');
     
     // 使用 POST 請求直接獲取 token
+    // 注意：為了相容 AList，我們使用 v2.0 終端點
     const tokenUrl = `${onedriveHostMap[config.region].oauth}/common/oauth2/v2.0/token`;
     const tokenParams = new URLSearchParams();
     tokenParams.append('client_id', config.clientId);
@@ -150,6 +151,16 @@ async function handleAuthCallback(req, res) {
     tokenParams.append('redirect_uri', config.redirectUri);
     tokenParams.append('grant_type', 'authorization_code');
     
+    // 詳細記錄請求內容以便調試
+    console.log('Token Request URL:', tokenUrl);
+    console.log('Token Request Params:', {
+      client_id: config.clientId ? `已設定 (長度: ${config.clientId.length})` : '未設定',
+      client_secret: '已設定但不顯示',
+      code: code ? `已設定 (長度: ${code.length})` : '未設定',
+      redirect_uri: config.redirectUri,
+      grant_type: 'authorization_code'
+    });
+    
     const tokenResponse = await axios.post(tokenUrl, tokenParams, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -157,14 +168,14 @@ async function handleAuthCallback(req, res) {
     });
     
     console.log('成功獲取 Token');
-    
-    // 安全地輸出 token 響應信息，但不顯示敏感內容
+      // 安全地輸出 token 響應信息，但不顯示敏感內容
     const safeResponse = { ...tokenResponse.data };
     if (safeResponse.access_token) safeResponse.access_token = `已設定 (長度: ${tokenResponse.data.access_token.length})`;
     if (safeResponse.refresh_token) safeResponse.refresh_token = `已設定 (長度: ${tokenResponse.data.refresh_token.length})`;
     if (safeResponse.id_token) safeResponse.id_token = `已設定 (長度: ${tokenResponse.data.id_token.length})`;
     
     console.log('Token 響應:', JSON.stringify(safeResponse, null, 2));
+    console.log('Token 響應包含的屬性:', Object.keys(tokenResponse.data).join(', '));
     
     // 從響應中直接獲取 refresh_token
     const refreshToken = tokenResponse.data.refresh_token;
@@ -179,7 +190,7 @@ async function handleAuthCallback(req, res) {
         `?client_id=${encodeURIComponent(config.clientId)}` +
         `&redirect_uri=${encodeURIComponent(config.redirectUri)}` +
         `&access_token=${encodeURIComponent(accessToken)}` +
-        `&note=${encodeURIComponent('未能獲取refresh_token，使用access_token作為替代')}`;
+        `&note=${encodeURIComponent('未能獲取refresh_token，使用access_token作為替代。這在AList中可能導致AADSTS9002313錯誤。')}`;
       
       res.writeHead(302, { Location: successUrl });
       res.end();
@@ -188,11 +199,24 @@ async function handleAuthCallback(req, res) {
     
     console.log('成功獲取 refresh_token，長度:', refreshToken.length);
     
+    // AList 需要使用特定格式的 refresh token
+    // 檢查是否有其他重要屬性可以保存
+    const tokenExtra = {};
+    const importantFields = ['token_type', 'expires_in', 'scope', 'ext_expires_in'];
+    importantFields.forEach(field => {
+      if (tokenResponse.data[field]) {
+        tokenExtra[field] = tokenResponse.data[field];
+      }
+    });
+    
+    console.log('提取的額外 Token 資訊:', tokenExtra);
+    
     // 重定向到成功頁面並傳遞 token
     const successUrl = '/public/success.html' + 
       `?client_id=${encodeURIComponent(config.clientId)}` +
       `&redirect_uri=${encodeURIComponent(config.redirectUri)}` +
-      `&refresh_token=${encodeURIComponent(refreshToken)}`;
+      `&refresh_token=${encodeURIComponent(refreshToken)}` +
+      `&note=${encodeURIComponent('成功獲取 refresh_token，可直接用於 AList')}`;
     
     res.writeHead(302, { Location: successUrl });
     res.end();

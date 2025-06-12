@@ -253,14 +253,12 @@ async function handleAuthCallback(req, res) {
       
       // 雖然我們無法直接獲取 refresh token，但我們可以提供 accessToken 給前端
       const accessToken = tokenResponse.accessToken || '';
-      
-      // 注意：這是一個臨時解決方案，因為 access token 有效期較短
+        // 注意：這是一個臨時解決方案，因為 access token 有效期較短（通常1小時）
       const successUrl = '/public/success.html' + 
         `?client_id=${encodeURIComponent(config.clientId)}` +
         `&redirect_uri=${encodeURIComponent(config.redirectUri)}` +
         `&access_token=${encodeURIComponent(accessToken)}` +
-        `&note=${encodeURIComponent('MSAL未提供refresh_token，請參考文檔獲取指南')}`;
-      
+        `&note=${encodeURIComponent('未能獲取refresh_token，使用access_token作為替代，請注意其有效期較短')}`;
       res.writeHead(302, { Location: successUrl });
       res.end();
     } else {

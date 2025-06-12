@@ -6,10 +6,6 @@
       "use": "@vercel/node"
     },
     {
-      "src": "api/oauth.js",
-      "use": "@vercel/node"
-    },
-    {
       "src": "public/**",
       "use": "@vercel/static"
     }
@@ -33,14 +29,6 @@
     {
       "src": "/auth/callback",
       "dest": "/api/index.js"
-    },
-    {
-      "src": "/api/oauth/(.*)",
-      "dest": "/api/oauth.js"
-    },
-    {
-      "src": "/api/oauth",
-      "dest": "/api/oauth.js"
     },
     {
       "src": "/(.*)",

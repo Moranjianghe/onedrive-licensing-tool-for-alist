@@ -84,11 +84,10 @@
             <h2>關於此工具</h2>
             <p>此工具幫助您獲取 OneDrive 的授權認證，便於在 AList 中掛載您的 OneDrive 儲存空間。</p>
             <p>使用此工具，您將獲得 AList 掛載 OneDrive 所需的 refresh_token 等授權憑證。</p>
-        </div>
-          <div class="info-section">
+        </div>          <div class="info-section">
             <h2>使用方法</h2>
             <ol>
-                <li>點擊下方「取得 OneDrive 授權」按鈕 (強烈推薦使用「直接 OAuth 流程」)</li>
+                <li>點擊下方「取得 OneDrive 授權」按鈕</li>
                 <li>登入您的 Microsoft 帳戶</li>
                 <li>授予必要的權限</li>
                 <li>系統會自動獲取並顯示需要的授權信息</li>
@@ -98,18 +97,11 @@
         <div class="info-section" style="background-color: #fff8e1; border-left-color: #ffc107;">
             <h2>解決常見問題</h2>
             <p><strong>遇到 "AADSTS9002313: Invalid request" 錯誤?</strong></p>
-            <p>這通常是因為在 AList 中使用的令牌格式不正確。請使用「直接 OAuth 流程」獲取令牌，它提供的 refresh token 可以正確用於 AList。</p>
-            <p>一般來說，使用 Microsoft 的 MSAL 庫會限制對 refresh token 的訪問，這是為什麼我們提供兩種授權方式的原因。</p>
+            <p>這通常是因為在 AList 中使用的令牌格式不正確。請嘗試重新獲取授權或檢查您的應用程式配置。</p>
+            <p>一般來說，Microsoft 的 MSAL 庫會嚴格控制對 refresh token 的訪問，但我們會盡力獲取。</p>
         </div>
-          <div class="info-section">
-            <h2>選擇授權方式</h2>
-            <p><strong>推薦方式：</strong> 使用直接 OAuth 流程可獲取 refresh token（長期有效，最適合 AList）</p>
-            <p><strong>替代方式：</strong> 使用 MSAL 庫流程可能只獲取 access token（短期有效，可能需要定期更新）</p>
-        </div>
-        
-        <div class="button-group">
-            <a href="/api/oauth/auth/login" class="button" style="background-color: #0f9d58;">推薦方式：使用直接 OAuth 流程</a>
-            <a href="/auth/login" class="button" style="background-color: #F4B400;">替代方式：使用 MSAL 庫流程</a>
+          <div class="button-group">
+            <a href="/auth/login" class="button" style="background-color: #4285f4;">取得 OneDrive 授權</a>
         </div>
         
         <div class="footer">
