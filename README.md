@@ -1,69 +1,73 @@
-# OneDrive 授權工具 (AList 掛載助手)
+# OneDrive 授權工具
 
-這是一個輕量級工具，幫助您獲取在 AList 中掛載 OneDrive 時所需的授權 token。
+> 項目 [AlistGo/alist](https://github.com/AlistGo/alist) 由個人開發者轉由企業維護後，此前的回傳頁面 `https://alist.nn.ci/tool/onedrive/callback` 已經無法正常使用，官網文檔也無法正常查看，加之大家對原先的驗證方式亦有隱私權的顧慮，故編寫了幾個簡單的頁面和一個使用教程。
 
-## 功能特點
+> 本工具旨在協助用戶自行完成 OneDrive 授權，適用於 Alist 等第三方掛載場景，無需將敏感資訊交給他人。
 
-- 簡潔的用戶界面
-- 自動獲取 Microsoft OAuth 授權
-- 支持多個區域 (global, cn, us, de)
-- 提供完整的掛載所需信息 (refresh_token 等)
-- 可輕鬆部署到 Vercel 無伺服器平台
+## 使用步驟
 
-## 解決 "AADSTS9002313: Invalid request" 錯誤
+### 一、註冊 Azure 應用
 
-如果您在使用 AList 時遇到 "AADSTS9002313: Invalid request" 錯誤，該錯誤通常是因為：
+1. 登入 [Azure 門戶](https://portal.azure.com/)
+2. 新增應用，取得 `client_id`（Application (client) ID）
+3. 在「重定向 URI」新增您的 GitHub Pages 頁面地址，例如：`https://onedrive-licensing.moranxia.com/auth/callback` 或  `https://locolhost:3000/auth/callback` 平台選「Web」
+4. 選擇正確的應用程序類型：
+   - **重要**：在「身份驗證」頁面，選擇平台類型為「**Web**」（推薦用於 Alist）
+   - 請勿選擇「單頁應用 (SPA)」，這會導致 Alist 無法使用相應的 token
+   - 重定向 URI 設定必須與授權頁面指定的一致
+5. 配置 API 權限：
+   - 進入「API 權限」頁面
+   - 點擊「添加權限」> 選「Microsoft Graph」>「委託的權限」
+   - 搜尋 `Files`，勾選所需權限（如 Files.ReadWrite.All）
+   - 點擊「添加權限」保存
 
-1. 應用憑證格式不符合 AList 的要求
-2. token 已過期或權限不足
-3. Microsoft API 的變更導致授權流程不相容
+   ![配置 API 權限示例](img/pbtqwogj.3hx.png)
 
-請嘗試重新獲取授權，並確保您的 Microsoft 應用程式已經配置了正確的權限。
+6. 獲取 client_secret
+   - 在 Azure 入口左側選單點選「憑證與密碼」（Certificates & secrets）
+   - 點擊「新用戶端密碼」（New client secret）
+   - 輸入描述（可隨意填寫，例如：AList 掛載）
+   - 選擇過期時間（建議選擇 12 個月或 24 個月，過期後需重新生成）
+   - 點擊「新增」後，會在下方列表中看到剛剛產生的密碼，**請務必複製並保存這一串值**，之後將無法再次查看！
+   - 這個值就是 `client_secret`，稍後在本地 .env 或 Vercel 環境變數中填寫
 
-## 本地開發與運行
+> ⚠️ **應用類型和 API 權限配置非常重要！**
+> 應用類型必須設置為「Web」，否則 Alist 可能會出現 AADSTS90023 錯誤
+> 未正確配置 API 權限將導致授權後無法訪問 OneDrive 文件
 
-### 準備工作
+## 運行
 
-1. 在 [Azure Portal](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) 註冊應用程式
-2. 創建一個新的 Web 應用
-3. 設置重定向 URI：
-   - `http://localhost:3000/auth/callback`（本地開發）
-   - `https://your-vercel-app.vercel.app/auth/callback`（Vercel 部署）
-4. 在「憑證和密碼」部分創建一個新的客戶端密碼
-5. 記下應用程式 (client) ID 和客戶端密碼
+分為本地運行和 Vercel 運行。
 
 ### 本地運行
 
 1. 複製 `.env.example` 為 `.env` 並填入您的配置：
 
-```bash
-# Microsoft OAuth 設定
-CLIENT_ID=your_client_id_here
-CLIENT_SECRET=your_client_secret_here
-REDIRECT_URI=http://localhost:3000/auth/callback
-PORT=3000
-
-# 選擇區域 (global, cn, us, de)
-REGION=global
-```
+   ```bash
+   # Microsoft OAuth 設定
+   CLIENT_ID=your_client_id_here
+   CLIENT_SECRET=your_client_secret_here
+   REDIRECT_URI=http://localhost:3000/auth/callback
+   PORT=3000 #可選
+   ```
 
 2. 安裝依賴：
 
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
 3. 啟動服務：
 
-```bash
-npm start
-```
+   ```bash
+   npm start
+   ```
 
-4. 在瀏覽器打開 http://localhost:3000
+4. 在瀏覽器打開 `http://localhost:3000`
 
-## Vercel 部署
+### Vercel 部署
 
-[![部署到 Vercel](https://vercel.com/button)](https://vercel.com/import/project?template=https://github.com/yourusername/onedrive-licensing-tool-for-alist)
+[![部署到 Vercel](https://vercel.com/button)](https://vercel.com/import/project?template=https://github.com/moranjianghe/onedrive-licensing-tool-for-alist)
 
 1. 點擊上方按鈕，或直接將本儲存庫連結到 Vercel
 2. 在 Vercel 環境變數設定中添加：
@@ -81,9 +85,8 @@ npm start
 成功獲取授權後，您會得到以下資訊：
 
 1. **Client ID**: 您的 Microsoft 應用程式 ID
-2. **Client Secret**: 您的 Microsoft 應用程式密鑰
-3. **Redirect URI**: 您配置的重定向 URI
-4. **Refresh Token**: 用於獲取存取權限的重要令牌
+2. **Redirect URI**: 您配置的重定向 URI
+3. **Refresh Token**: 用於獲取存取權限的重要令牌
 
 在 AList 中添加 OneDrive 存儲時：
 
@@ -93,23 +96,21 @@ npm start
 4. 填入獲取到的 Refresh Token
 5. 選擇正確的區域 (global, cn, us, de)
 
-**注意**：如果遇到 "AADSTS9002313: Invalid request" 錯誤，請嘗試重新獲取授權或聯繫 Microsoft 支持。
-
 ## 技術細節
 
 - 使用純 Node.js HTTP 模組，無需任何 Web 框架
-- MSAL (Microsoft Authentication Library) 處理 OAuth 授權流程
-- Microsoft Graph 用戶端庫用於與 Microsoft 服務交互
 - 靜態 HTML/CSS/JavaScript 實現用戶界面
 
 ## 隱私聲明
 
 本工具僅獲取必要的 Microsoft 授權令牌，不存儲或傳輸您的任何個人資料。所有授權過程均在您的瀏覽器中進行，獲取的令牌僅顯示給您本人。
 
-## 授權協議
+## 參考資源
 
-MIT
+- [Alist 官方文件](https://github.com/AlistGo/docs/blob/main/docs/zh/guide/drivers/onedrive.md)
+- [微軟 Azure 應用註冊文檔](https://learn.microsoft.com/zh-cn/azure/active-directory/develop/quickstart-register-app)
+- [GitHub Pages 官方說明](https://pages.github.com/)
 
-## 支持與貢獻
+## 最后
 
-如有問題或建議，歡迎提交 Issue 或 Pull Request。
+<del>如遇其它技術問題，可在本項目 issue 區留言或提交討論。</del>代碼都是 AI 寫的，出了問題可以給我留言但我也不一定有能力處理。歡迎改善本項目。

@@ -23,11 +23,11 @@ const config = {
   clientId: process.env.CLIENT_ID || 'your_client_id_here',
   clientSecret: process.env.CLIENT_SECRET || 'your_client_secret_here',
   redirectUri: process.env.REDIRECT_URI || 'http://localhost:3000/auth/callback',
-  port: process.env.PORT || 3000,
-  region: process.env.REGION || 'global' // global, cn, us, de
+  port: process.env.PORT || 3000
 };
 
-// Microsoft Graph API 主機映射
+// Microsoft Graph API 主機映射（自動根據環境變數 REGION 選擇 base url，不暴露 region 給用戶）
+const region = process.env.REGION || 'global';
 const onedriveHostMap = {
   global: {
     oauth: 'https://login.microsoftonline.com',
@@ -95,7 +95,7 @@ const server = http.createServer(async (req, res) => {
 
 // 標準 OAuth 2.0 登入
 function handleAuthLogin(req, res) {
-  const authEndpoint = `${onedriveHostMap[config.region].oauth}/common/oauth2/v2.0/authorize`;
+  const authEndpoint = `${onedriveHostMap[region].oauth}/common/oauth2/v2.0/authorize`;
   const authParams = new URLSearchParams({
     client_id: config.clientId,
     response_type: 'code',
@@ -129,7 +129,7 @@ async function handleAuthCallback(req, res) {
   }
   try {
     console.log('正在用授權碼交換 token...');
-    const tokenUrl = `${onedriveHostMap[config.region].oauth}/common/oauth2/v2.0/token`;
+    const tokenUrl = `${onedriveHostMap[region].oauth}/common/oauth2/v2.0/token`;
     const tokenParams = new URLSearchParams();
     tokenParams.append('client_id', config.clientId);
     tokenParams.append('client_secret', config.clientSecret);
