@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>啟動本地服務</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; }
+    button { font-size: 1.1em; padding: 10px 28px; margin-top: 18px; cursor: pointer; }
+    h2 { color: #333; }
+    .form-group { margin: 12px 0; }
+    label { display: block; margin-bottom: 4px; }
+    input, select { padding: 6px; width: 260px; }
+    #open-btn { display: none; }
+    #msg { color: green; margin-top: 10px; }
+    #err { color: red; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>本地授權工具</h2>
+  <form id="env-form">
+    <div class="form-group">
+      <label>CLIENT_ID</label>
+      <input name="CLIENT_ID" required placeholder="your_client_id_here" />
+    </div>
+    <div class="form-group">
+      <label>CLIENT_SECRET</label>
+      <input name="CLIENT_SECRET" required placeholder="your_client_secret_here" />
+    </div>
+    <div class="form-group">
+      <label>REDIRECT_URI</label>
+      <input name="REDIRECT_URI" value="http://localhost:3000/auth/callback" required placeholder="http://localhost:3000/auth/callback" />
+    </div>
+    <div class="form-group">
+      <label>PORT</label>
+      <input name="PORT" value="3000" required placeholder="3000" />
+    </div>
+    <div class="form-group">
+      <label>REGION</label>
+      <select name="REGION" title="REGION">
+        <option value="global">global（預設）</option>
+        <option value="cn">cn</option>
+        <option value="us">us</option>
+      </select>
+    </div>
+    <button type="submit">啟動服務</button>
+  </form>
+  <div id="msg"></div>
+  <div id="err"></div>
+  <button id="open-btn" onclick="openLocalhost()">打開本地服務</button>
+  <script>
+    const { ipcRenderer } = require('electron');
+    const form = document.getElementById('env-form');
+    const msg = document.getElementById('msg');
+    const err = document.getElementById('err');
+    const openBtn = document.getElementById('open-btn');
+
+    form.onsubmit = async function(e) {
+      e.preventDefault();
+      msg.textContent = '';
+      err.textContent = '';
+      const data = Object.fromEntries(new FormData(form).entries());
+      try {
+        await ipcRenderer.invoke('start-service', data);
+        msg.textContent = '服務已啟動！';
+        openBtn.style.display = '';
+      } catch (e) {
+        err.textContent = '啟動服務失敗：' + e.message;
+      }
+    };
+    function openLocalhost() {
+      require('electron').shell.openExternal('http://localhost:3000');
+    }
+  </script>
+</body>
+</html>

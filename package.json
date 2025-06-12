@@ -1,11 +1,12 @@
 {
   "name": "onedrive-licensing-tool-for-alist",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "electron-main.js",
   "scripts": {
     "start": "node index.js",
     "dev": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "electron": "electron ."
   },
   "keywords": [
     "onedrive",
@@ -21,5 +22,8 @@
     "axios": "^1.6.0",
     "dotenv": "^16.5.0",
     "isomorphic-fetch": "^3.0.0"
+  },
+  "devDependencies": {
+    "electron": "^36.4.0"
   }
 }
