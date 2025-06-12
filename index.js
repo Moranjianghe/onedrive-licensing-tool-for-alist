@@ -1,14 +1,7 @@
-// 載入環境變數
-const dotenv = require('dotenv');
-const envResult = dotenv.config();
-
-// 檢查環境變數是否成功載入
-if (envResult.error) {
-  console.error('環境變數載入錯誤:', envResult.error);
-} else {
-  console.log('環境變數載入成功，已載入的變數:', Object.keys(envResult.parsed).join(', '));
+// 只在本地開發時載入 .env
+if (process.env.VERCEL !== '1') {
+  require('dotenv').config();
 }
-
 
 const http = require('http');
 const path = require('path');
