@@ -38,7 +38,7 @@
 ### 一鍵 EXE 運行（最簡單）
 
 1. 下載最新的穩定版（在 [Releases](https://github.com/moranjianghe/onedrive-licensing-tool-for-alist/releases) 頁面）。
-2. 解壓，雙擊 exe，根據圖形界面提示輸入環境變數，點擊啟動即可。
+2. 雙擊 exe，根據圖形界面提示輸入環境變數，點擊啟動即可。
 3. 點擊「打開本地服務」自動跳轉到 http://localhost:3000。
 
 > 無需安裝 Node.js，無需命令行，適合所有 Windows 用戶。
