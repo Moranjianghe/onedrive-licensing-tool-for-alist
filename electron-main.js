@@ -6,7 +6,7 @@ let serviceStarted = false;
 function createWindow() {
   const win = new BrowserWindow({
     width: 420,
-    height: 480,
+    height: 680,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -29,10 +29,10 @@ ipcMain.handle('start-service', (event, envVars) => {
     Object.assign(process.env, envVars);
     require(path.join(__dirname, 'index.js'));
     serviceStarted = true;
+    // 啟動服務後自動打開瀏覽器
+    setTimeout(() => {
+      shell.openExternal('http://localhost:3000');
+    }, 100); // 延遲0.1秒，確保服務已啟動
   }
   return true;
 });
-
-exports.openLocalhost = function () {
-  shell.openExternal('http://localhost:3000');
-};

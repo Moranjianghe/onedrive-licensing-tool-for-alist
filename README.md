@@ -35,9 +35,21 @@
 
 分為本地運行和 Vercel 運行。
 
-### 圖形化啟動（推薦給不熟悉命令行的用戶）
+### 一鍵 EXE 運行（最簡單）
 
-1. 執行下列命令安裝依賴（僅需一次）：
+1. 下載最新的穩定版（在 [Releases](https://github.com/moranjianghe/onedrive-licensing-tool-for-alist/releases) 頁面）。
+2. 解壓，雙擊 exe，根據圖形界面提示輸入環境變數，點擊啟動即可。
+3. 點擊「打開本地服務」自動跳轉到 http://localhost:3000。
+
+> 無需安裝 Node.js，無需命令行，適合所有 Windows 用戶。
+
+> 基於 electron，理論上支持全平臺，但目前只編譯測試 Windows 版本。
+
+---
+
+### 本地運行（圖形化方式）
+
+1. 安裝依賴（僅需一次）：
    
    ```powershell
    npm install

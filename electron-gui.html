@@ -62,14 +62,14 @@
       const data = Object.fromEntries(new FormData(form).entries());
       try {
         await ipcRenderer.invoke('start-service', data);
-        msg.textContent = '服務已啟動！';
+        msg.textContent = '服務已啟動！請在瀏覽器中打開 http://localhost:' + data.PORT + ' 繼續操作。';
         openBtn.style.display = '';
       } catch (e) {
         err.textContent = '啟動服務失敗：' + e.message;
       }
     };
     function openLocalhost() {
-      require('electron').shell.openExternal('http://localhost:3000');
+      require('electron').shell.openExternal('http://localhost:' + data.PORT);
     }
   </script>
 </body>
