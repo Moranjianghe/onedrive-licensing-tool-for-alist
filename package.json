@@ -6,7 +6,9 @@
     "start": "node index.js",
     "dev": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "electron": "electron ."
+    "electron": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
   "keywords": [
     "onedrive",
@@ -24,6 +26,22 @@
     "isomorphic-fetch": "^3.0.0"
   },
   "devDependencies": {
-    "electron": "^36.4.0"
+    "electron": "^36.4.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.yourcompany.onedrive-licensing-tool",
+    "productName": "OneDrive 授權工具",
+    "files": [
+      "index.js",
+      "electron-main.js",
+      "electron-gui.html",
+      "api/",
+      "public/",
+      "img/"
+    ],
+    "win": {
+      "target": "nsis"
+    }
   }
 }
